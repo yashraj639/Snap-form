@@ -7,11 +7,11 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@repo/types": "*",
+    "@repo/types": "workspace:*",
     "node-cron": "^3.0.3"
   },
   "devDependencies": {
-    "@repo/typescript-config": "*",
+    "@repo/typescript-config": "workspace:*",
     "@types/node": "^20.11.24",
     "@types/node-cron": "^3.0.11",
     "typescript": "5.9.2"
