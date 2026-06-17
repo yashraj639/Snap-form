@@ -6,8 +6,8 @@ export function formatUptime(seconds: number): string {
 
   const parts: string[] = [];
   if (d > 0) parts.push(`${d}d`);
-  if (h > 0) parts.push(`${h}h`);
-  if (m > 0) parts.push(`${m}m`);
+  if (h > 0 || d > 0) parts.push(`${h}h`);
+  if (m > 0 || h > 0 || d > 0) parts.push(`${m}m`);
   parts.push(`${s}s`);
 
   return parts.join(" ");
