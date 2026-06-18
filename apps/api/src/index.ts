@@ -1,29 +1,13 @@
-import express, { NextFunction, Request, Response } from "express";
-import cors from "cors";
-import healthRouter from "./routes/health";
+import app from "./app";
+import { config } from "./lib/env";
 
-const app = express();
-
-
-app.use(cors({ origin: process.env.ALLOWED_ORIGIN || "http://localhost:3001" }));
-app.use(express.json());
-
-
-app.use("/", healthRouter);
-
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal Server Error" });
-});
-
-
-const server = app.listen(3000, () => {
-  console.log("Express API running on port 3000");
+const server = app.listen(config.port, () => {
+  console.log(`Express API running on port ${config.port}`);
 });
 
 server.on("error", (err: NodeJS.ErrnoException) => {
   if (err.code === "EADDRINUSE") {
-    console.error("Port 3000 is already in use");
+    console.error(`Port ${config.port} is already in use`);
   } else {
     console.error("Server error:", err);
   }
