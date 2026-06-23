@@ -24,9 +24,9 @@ export async function seedUser(data?: {
   role?: "USER" | "ADMIN" | "SUPER_ADMIN";
   plan?: "FREE" | "PREMIUM" | "BUSINESS";
 }) {
-  const email = data?.email ?? `test-${Math.random().toString(36).substring(2, 10)}@example.com`;
+  const email = data?.email ?? `test-${crypto.randomUUID()}@example.com`;
   const name = data?.name ?? "Test User";
-  const username = data?.username ?? `user_${Math.random().toString(36).substring(2, 8)}`;
+  const username = data?.username ?? `user_${crypto.randomUUID().replace(/-/g, "").substring(0, 8)}`;
   const role = data?.role ?? "USER";
   const plan = data?.plan ?? "FREE";
 
