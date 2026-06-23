@@ -1,0 +1,42 @@
+import { prisma } from "@repo/db";
+
+/**
+ * Clean all tables in the database to guarantee a fresh state per module/test.
+ * TRUNCATE with CASCADE resets tables and their IDs/sequences in PostgreSQL.
+ */
+export async function cleanDb() {
+  await prisma.response.deleteMany({});
+  await prisma.form.deleteMany({});
+  await prisma.session.deleteMany({});
+  await prisma.account.deleteMany({});
+  await prisma.verification.deleteMany({});
+  await prisma.user.deleteMany({});
+  await prisma.template.deleteMany({});
+}
+
+/**
+ * Seed a basic user for testing.
+ */
+export async function seedUser(data?: {
+  email?: string;
+  name?: string;
+  username?: string;
+  role?: "USER" | "ADMIN" | "SUPER_ADMIN";
+  plan?: "FREE" | "PREMIUM" | "BUSINESS";
+}) {
+  const email = data?.email ?? `test-${Math.random().toString(36).substring(2, 10)}@example.com`;
+  const name = data?.name ?? "Test User";
+  const username = data?.username ?? `user_${Math.random().toString(36).substring(2, 8)}`;
+  const role = data?.role ?? "USER";
+  const plan = data?.plan ?? "FREE";
+
+  return await prisma.user.create({
+    data: {
+      email,
+      name,
+      username,
+      role,
+      plan,
+    },
+  });
+}
