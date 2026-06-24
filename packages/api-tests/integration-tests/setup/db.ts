@@ -2,8 +2,7 @@ import { prisma } from "@repo/db";
 import crypto from "crypto";
 
 /**
- * Clean all tables in the database to guarantee a fresh state per module/test.
- * TRUNCATE with CASCADE resets tables and their IDs/sequences in PostgreSQL.
+ * Clean all tables in the database using deleteMany to guarantee a fresh state per module/test.
  */
 export async function cleanDb() {
   await prisma.$transaction([

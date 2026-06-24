@@ -7,7 +7,7 @@
     "baseUrl": ".",
     "paths": {
       "api": [
-        "../apps/api/src/app.ts"
+        "../../apps/api/src/app.ts"
       ]
     }
   },
