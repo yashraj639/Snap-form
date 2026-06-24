@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/app.ts"
+  },
   "scripts": {
     "lint": "eslint src/",
     "dev": "bun run src/index.ts",
-    "build": "tsc",
-    "test:integration": "bun test integration-tests/"
+    "build": "tsc"
   },
   "dependencies": {
     "@repo/db": "workspace:*",

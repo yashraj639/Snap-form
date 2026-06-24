@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 import { beforeAll, afterAll } from "bun:test";
-import app from "../../src/app";
+import app from "api";
 import { Server } from "http";
 
 let testServer: Server;
