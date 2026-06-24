@@ -28,6 +28,7 @@ model User {
 
   // Relations
   forms         Form[]
+  templates     Template[]
   sessions      Session[]
   accounts      Account[]
 

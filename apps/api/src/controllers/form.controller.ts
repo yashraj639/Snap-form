@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { Request, Response, RequestHandler } from "express";
 import { asyncHandler } from "../utils/async-handler";
 import { FormDefinitionSchema } from "@repo/types";
@@ -8,28 +9,61 @@ import prisma from "../lib/db";
 // ============================================
 
 export const listForms: RequestHandler = asyncHandler(
-  async (_req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
     const userId = res.locals.user.id as string;
 
-    const forms = await prisma.form.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        iconSymbol: true,
-        coverUrl: true,
-        published: true,
-        slug: true,
-        responseCount: true,
-        viewCount: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    // 1. Extract query params
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 10));
+    const search = req.query.search as string | undefined;
+    const published = req.query.published as string | undefined;
+    // 2. Build where clause
+    const whereClause: Prisma.FormWhereInput = { userId };
 
-    res.json({ success: true, data: forms });
+    if (search) {
+      whereClause.title = { contains: search, mode: "insensitive" };
+    }
+
+    if (published !== undefined) {
+      whereClause.published = published === "true";
+    }
+    // 3. Fetch data and count in parallel
+    const parsedSkip = req.query.skip ? parseInt(req.query.skip as string) : undefined;
+    const skip = parsedSkip !== undefined && !isNaN(parsedSkip) ? parsedSkip : (page - 1) * limit;
+
+    const [forms, total] = await Promise.all([
+      prisma.form.findMany({
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          iconSymbol: true,
+          coverUrl: true,
+          published: true,
+          slug: true,
+          responseCount: true,
+          viewCount: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.form.count({ where: whereClause })
+    ]);
+    // 4. Return paginated response
+    res.json({
+      success: true,
+      data: forms,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   },
 );
 
