@@ -13,6 +13,11 @@ model Template {
 
   // Preview
   iconSymbol String? @default("📋")
+  images     String[] @default([])
+
+  // Source form (optional back-reference)
+  formId String?
+  form   Form?   @relation(fields: [formId], references: [id], onDelete: SetNull)
 
   // Metadata
   featured Boolean @default(false)

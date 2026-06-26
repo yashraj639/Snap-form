@@ -30,6 +30,7 @@ model Form {
 
   // Relations
   responses    Response[]
+  templates    Template[]
 
   // Metadata
   viewCount    Int      @default(0)
