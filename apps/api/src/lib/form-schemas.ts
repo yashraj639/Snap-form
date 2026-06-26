@@ -16,7 +16,7 @@ export const CreateFormSchema = z.object({
   requireEmail: z.boolean().default(true),
   slug: z
     .string()
-    .regex(/^[a-z0-9-]+$/, "Slug may only contain lowercase letters, numbers, and hyphens")
+    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Slug must start and end with a letter or number, hyphens allowed between words")
     .min(3)
     .max(100)
     .optional(),
@@ -45,3 +45,4 @@ export const GenerateFormSchema = z.object({
 
 
 export type SubmitResponseInput = z.infer<typeof SubmitResponseSchema>;
+export type GenerateFormInput = z.infer<typeof GenerateFormSchema>;
