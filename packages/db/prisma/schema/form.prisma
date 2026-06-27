@@ -34,7 +34,8 @@ model Form {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Relations
-  responses Response[]
+  responses    Response[]
+  templates    Template[]
 
   // Metadata
   viewCount     Int @default(0)

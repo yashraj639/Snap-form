@@ -4,6 +4,63 @@ import { asyncHandler } from "../utils/async-handler";
 import prisma from "../lib/db";
 
 // ============================================
+// POST /api/v1/templates — publish a form as a community template
+// ============================================
+
+export const createTemplate: RequestHandler = asyncHandler(
+    async (req: Request, res: Response) => {
+        const userId = res.locals.user.id as string;
+        const {
+            title,
+            description,
+            category,
+            iconSymbol,
+            images,
+            formId,
+            fields,
+        } = req.body;
+
+        // Normalize direct fields input to store only the elements array
+        let resolvedFields = fields ? fields.elements : undefined;
+        let verifiedFormId: string | null = null;
+
+        // When formId is provided, verify ownership and snapshot the fields
+        if (formId) {
+            const sourceForm = await prisma.form.findFirst({
+                where: { id: formId, userId },
+                select: { fields: true },
+            });
+
+            if (!sourceForm) {
+                res.status(404).json({
+                    success: false,
+                    message: "Source form not found or does not belong to you",
+                });
+                return;
+            }
+
+            resolvedFields = sourceForm.fields;
+            verifiedFormId = formId;
+        }
+
+        const template = await prisma.template.create({
+            data: {
+                title,
+                description,
+                category,
+                iconSymbol,
+                images: images ?? [],
+                fields: resolvedFields,
+                formId: verifiedFormId,
+                userId,
+            },
+        });
+
+        res.status(201).json({ success: true, data: template });
+    },
+);
+
+// ============================================
 // GET /api/v1/templates/owned — list user's owned templates
 // ============================================
 
