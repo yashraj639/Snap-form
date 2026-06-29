@@ -341,33 +341,28 @@ export const setupGoogleSheets: RequestHandler = asyncHandler(
       return;
     }
 
-    const integration = await prisma.formIntegration.upsert({
-      where: { formId_provider: { formId: form.id, provider: "GOOGLE_SHEETS" } },
-      update: { accessToken, refreshToken, spreadsheetId, spreadsheetUrl },
-      create: {
-        formId: form.id,
-        provider: "GOOGLE_SHEETS",
-        accessToken,
-        refreshToken,
-        spreadsheetId,
-        spreadsheetUrl,
-      },
-    });
-    await prisma.form.update({
-      where: { id: form.id },
-      data: { googleSheetId: spreadsheetId, googleSheetUrl: spreadsheetUrl },
-    });
-
-    res.json({ 
-      success: true, 
-      data: 
-      { 
-        id: integration.id, 
-        formId: integration.formId, 
-        provider: integration.provider, 
-        spreadsheetId: integration.spreadsheetId, 
-        spreadsheetUrl: integration.spreadsheetUrl, 
-        createdAt: integration.createdAt 
+    const [integration] = await prisma.$transaction([
+      prisma.formIntegration.upsert({
+        where: { formId_provider: { formId: form.id, provider: "GOOGLE_SHEETS" } },
+        update: { accessToken, refreshToken, spreadsheetId, spreadsheetUrl },
+        create: { formId: form.id, provider: "GOOGLE_SHEETS", accessToken, refreshToken, spreadsheetId, spreadsheetUrl },
+      }),
+      prisma.form.update({
+        where: { id: form.id },
+        data: { googleSheetId: spreadsheetId, googleSheetUrl: spreadsheetUrl },
+      }),
+    ]);
+    
+    res.json({
+      success: true,
+      data:
+      {
+        id: integration.id,
+        formId: integration.formId,
+        provider: integration.provider,
+        spreadsheetId: integration.spreadsheetId,
+        spreadsheetUrl: integration.spreadsheetUrl,
+        createdAt: integration.createdAt
       }
     });
   },
@@ -418,6 +413,16 @@ export const disconnectGoogleSheets: RequestHandler = asyncHandler(
 // GET /api/v1/forms/:id/responses/export/csv
 // ============================================
 
+
+// Escape a CSV cell: wrap in quotes, escape internal quotes, prevent formula injection
+const escapeCell = (val: unknown): string => {
+  const str = String(val ?? "");
+  const safe = str.startsWith("=") || str.startsWith("+") || str.startsWith("-") || str.startsWith("@")
+    ? `'${str}` : str;
+  return `"${safe.replace(/"/g, '""')}"`;
+};
+
+
 export const exportCsv: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = res.locals.user.id as string;
@@ -445,16 +450,14 @@ export const exportCsv: RequestHandler = asyncHandler(
     });
 
     // Build CSV with dynamic field columns
-    const staticHeaders = ["id", "email", "submittedAt"];
-    const fieldHeaders = fieldLabels.map((f) => `"${f.label}"`);
+    const staticHeaders = [escapeCell("id"), escapeCell("email"), escapeCell("submittedAt")];
+    const fieldHeaders = fieldLabels.map((f) => escapeCell(f.label));
     const header = [...staticHeaders, ...fieldHeaders].join(",");
 
     const rows = responses.map((r) => {
       const data = r.data as Record<string, unknown>;
-      const fieldValues = fieldLabels.map((f) =>
-        `"${String(data[f.id] ?? "").replace(/"/g, '""')}"`
-      );
-      return [r.id, r.email ?? "", r.createdAt.toISOString(), ...fieldValues].join(",");
+      const fieldValues = fieldLabels.map((f) => escapeCell(data[f.id]));
+      return [escapeCell(r.id), escapeCell(r.email ?? ""), escapeCell(r.createdAt.toISOString()), ...fieldValues].join(",");
     });
 
     const csv = [header, ...rows].join("\n");
