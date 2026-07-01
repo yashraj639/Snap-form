@@ -27,10 +27,12 @@ model User {
   plan          Plan      @default(FREE)
 
   // Relations
-  forms         Form[]
-  templates     Template[]
-  sessions      Session[]
-  accounts      Account[]
+  forms             Form[]
+  templates         Template[]
+  sessions          Session[]
+  accounts          Account[]
+  reviews           TemplateReview[]
+  ownedTemplates    UserOwnedTemplate[]
 
   // Metadata
   createdAt     DateTime  @default(now())

@@ -29,10 +29,62 @@ model Template {
   userId String?
   user   User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Relations
+  reviews        TemplateReview[]
+  ownedByUsers   UserOwnedTemplate[]
+
   @@index([featured])
   @@index([category])
   @@index([userId])
   @@index([createdAt])
   @@index([formId])
   @@map("templates")
+}
+
+// ============================================
+// TEMPLATE REVIEWS
+// ============================================
+
+model TemplateReview {
+  id    String  @id @default(cuid())
+  stars Int     // 1–5 star rating
+  text  String? @db.Text
+
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([templateId, userId]) // One review per user per template
+  @@index([templateId])
+  @@index([userId])
+  @@map("template_reviews")
+}
+
+// ============================================
+// USER OWNED TEMPLATES (Purchase/Clone Join Table)
+// ============================================
+
+model UserOwnedTemplate {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  // ID of the Form cloned from the template during purchase
+  clonedFormId String?
+
+  purchasedAt DateTime @default(now())
+
+  @@unique([userId, templateId]) // Prevent duplicate purchases
+  @@index([userId])
+  @@index([templateId])
+  @@map("user_owned_templates")
 }
