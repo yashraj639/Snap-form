@@ -4,6 +4,7 @@ import { validate } from "../../middleware/validate";
 import { CreateTemplateSchema, CreateReviewSchema } from "../../lib/template-schemas";
 import {
   createTemplate,
+  getCommunityTemplates,
   getOwnedTemplates,
   getTemplateById,
   purchaseTemplate,
@@ -13,6 +14,10 @@ import {
 const router: Router = Router();
 
 // GET /api/v1/templates/owned — list user's owned templates
+// GET /api/v1/templates/community
+router.get("/community", getCommunityTemplates);
+
+// GET /api/v1/templates/owned
 router.get("/owned", requireAuth, getOwnedTemplates);
 
 // GET /api/v1/templates/:id — fetch template details (requires auth)
