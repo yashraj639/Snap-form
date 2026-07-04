@@ -15,7 +15,6 @@ export function middleware(req: NextRequest) {
 
   const isOnboarded = req.cookies.get("snap_onboarded")?.value === "1";
 
-
   if (ONBOARDING_ONLY.some((p) => pathname.startsWith(p))) {
     if (isLoggedIn && isOnboarded) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -27,7 +26,7 @@ export function middleware(req: NextRequest) {
   if (PROTECTED.some((p) => pathname.startsWith(p))) {
 
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", req.url));
+      return NextResponse.redirect(new URL("/", req.url));
     }
     if (!isOnboarded) {
       return NextResponse.redirect(new URL("/onboarding", req.url));
