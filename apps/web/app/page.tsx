@@ -9,7 +9,6 @@ import {
   CardTitle,
   CardDescription,
 } from "@repo/ui/components/ui/card";
-import { Input } from "@repo/ui/components/ui/input";
 import { Separator } from "@repo/ui/components/ui/separator";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
@@ -140,14 +139,21 @@ function ChevronRightIcon({ className }: { className?: string }) {
   );
 }
 
-/* ── OAuth Helpers ───────────────────────────────────────────────── */
+/* ── Helpers ─────────────────────────────────────────────────────── */
 
-function handleGoogleLogin() {
-  window.location.href = `${API_URL}/api/auth/sign-in/social?provider=google&callbackURL=${encodeURIComponent(API_URL + "/api/v1/auth/oauth/callback")}`;
+function handleOAuthLogin(provider: "google" | "github") {
+  // Thread any ?callbackUrl from the middleware redirect through the OAuth flow
+  const params = new URLSearchParams(window.location.search);
+  const intendedDest = params.get("callbackUrl") ?? "";
+  const callbackURL = new URL(`${API_URL}/api/v1/auth/oauth/callback`);
+  if (intendedDest) {
+    callbackURL.searchParams.set("callbackUrl", intendedDest);
+  }
+  window.location.href = `${API_URL}/api/auth/sign-in/social?provider=${provider}&callbackURL=${encodeURIComponent(callbackURL.toString())}`;
 }
 
-function handleGitHubLogin() {
-  window.location.href = `${API_URL}/api/auth/sign-in/social?provider=github&callbackURL=${encodeURIComponent(API_URL + "/api/v1/auth/oauth/callback")}`;
+function scrollToGetStarted() {
+  document.getElementById("get-started")?.scrollIntoView({ behavior: "smooth" });
 }
 
 /* ── Main Component ──────────────────────────────────────────────── */
@@ -187,17 +193,13 @@ export default function Home() {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <a href="#get-started">
-              <Button variant="ghost" size="sm">
-                Sign In
-              </Button>
-            </a>
-            <a href="#get-started">
-              <Button size="sm">
-                Get Started
-                <ArrowRightIcon className="w-3.5 h-3.5" />
-              </Button>
-            </a>
+            <Button variant="ghost" size="sm" onClick={scrollToGetStarted}>
+              Sign In
+            </Button>
+            <Button size="sm" onClick={scrollToGetStarted}>
+              Get Started
+              <ArrowRightIcon className="w-3.5 h-3.5" />
+            </Button>
           </div>
         </div>
       </header>
@@ -225,26 +227,21 @@ export default function Home() {
           {/* AI Prompt Pill (decorative teaser) */}
           <div className="w-full max-w-2xl mt-10 relative group">
             <div className="absolute inset-0 bg-primary/5 blur-xl group-hover:bg-primary/10 transition-colors duration-500 rounded-full" />
-            <div className="relative flex items-center bg-background border border-border rounded-full p-1.5 shadow-sm transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={scrollToGetStarted}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") scrollToGetStarted(); }}
+              className="relative flex items-center bg-background border border-border rounded-full p-1.5 shadow-sm cursor-pointer transition-all hover:ring-2 hover:ring-ring hover:ring-offset-2 hover:ring-offset-background"
+            >
               <SparklesIcon className="ml-4 mr-2 text-muted-foreground w-5 h-5 shrink-0" />
-              <Input
-                unstyled
-                placeholder="Describe your form..."
-                className="flex-grow bg-transparent border-none shadow-none ring-0 focus:ring-0 text-base h-11 px-0"
-                readOnly
-                onClick={() => {
-                  document
-                    .getElementById("get-started")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
-              />
+              <span className="flex-grow text-muted-foreground text-base h-11 flex items-center select-none">
+                Describe your form...
+              </span>
               <Button
-                className="rounded-full h-10 px-6 shrink-0"
-                onClick={() => {
-                  document
-                    .getElementById("get-started")
-                    ?.scrollIntoView({ behavior: "smooth" });
-                }}
+                className="rounded-full h-10 px-6 shrink-0 pointer-events-none"
+                tabIndex={-1}
+                aria-hidden
               >
                 Generate
                 <ArrowRightIcon className="w-3.5 h-3.5" />
@@ -254,17 +251,17 @@ export default function Home() {
 
           {/* Secondary Actions */}
           <div className="flex flex-col sm:flex-row gap-3 mt-8">
-            <a href="#get-started">
-              <Button variant="outline" size="lg">
-                Get Started
-              </Button>
-            </a>
-            <Link href="/dashboard">
-              <Button variant="ghost" size="lg">
-                Open Dashboard
-                <ArrowRightIcon className="w-3.5 h-3.5" />
-              </Button>
-            </Link>
+            <Button variant="outline" size="lg" onClick={scrollToGetStarted}>
+              Get Started
+            </Button>
+            <Button
+              variant="ghost"
+              size="lg"
+              render={<Link href="/dashboard" />}
+            >
+              Open Dashboard
+              <ArrowRightIcon className="w-3.5 h-3.5" />
+            </Button>
           </div>
         </section>
 
@@ -469,7 +466,7 @@ export default function Home() {
                 variant="outline"
                 size="lg"
                 className="w-full justify-center gap-3"
-                onClick={handleGoogleLogin}
+                onClick={() => handleOAuthLogin("google")}
               >
                 <GoogleIcon className="w-5 h-5" />
                 Continue with Google
@@ -480,7 +477,7 @@ export default function Home() {
                 variant="outline"
                 size="lg"
                 className="w-full justify-center gap-3"
-                onClick={handleGitHubLogin}
+                onClick={() => handleOAuthLogin("github")}
               >
                 <GitHubIcon className="w-5 h-5" />
                 Continue with GitHub
@@ -495,13 +492,13 @@ export default function Home() {
 
               <p className="text-xs text-center text-muted-foreground leading-relaxed">
                 By continuing, you agree to our{" "}
-                <a href="#" className="underline hover:text-foreground">
+                <Link href="/terms" className="underline hover:text-foreground">
                   Terms of Service
-                </a>{" "}
+                </Link>{" "}
                 and{" "}
-                <a href="#" className="underline hover:text-foreground">
+                <Link href="/privacy" className="underline hover:text-foreground">
                   Privacy Policy
-                </a>
+                </Link>
                 .
               </p>
             </CardContent>
@@ -521,14 +518,19 @@ export default function Home() {
             </span>
           </div>
           <div className="flex gap-6">
-            {["Privacy", "Terms", "Support", "API"].map((link) => (
-              <a
-                key={link}
-                href="#"
+            {[
+              { label: "Privacy", href: "/privacy" },
+              { label: "Terms", href: "/terms" },
+              { label: "Support", href: "/support" },
+              { label: "API", href: "/api-docs" },
+            ].map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
                 className="text-sm text-muted-foreground hover:text-foreground underline transition-colors"
               >
-                {link}
-              </a>
+                {link.label}
+              </Link>
             ))}
           </div>
         </div>

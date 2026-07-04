@@ -22,11 +22,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-
   if (PROTECTED.some((p) => pathname.startsWith(p))) {
-
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/", req.url));
+      // Preserve the originally requested path so the OAuth flow can redirect
+      // back after login instead of always landing on the default destination.
+      const redirectUrl = new URL("/", req.url);
+      redirectUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(redirectUrl);
     }
     if (!isOnboarded) {
       return NextResponse.redirect(new URL("/onboarding", req.url));
