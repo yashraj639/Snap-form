@@ -118,7 +118,7 @@ export const getOwnedTemplates: RequestHandler = asyncHandler(
         res.json({
             success: true,
             data: templates,
-            meta: {
+            pagination: {
                 total,
                 page,
                 limit,
@@ -289,7 +289,7 @@ export const getCommunityTemplates: RequestHandler = asyncHandler(
         res.json({
             success: true,
             data: templates,
-            meta: {
+            pagination: {
                 total,
                 page,
                 limit,

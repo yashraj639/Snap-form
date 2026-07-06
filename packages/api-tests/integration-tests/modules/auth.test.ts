@@ -1,21 +1,20 @@
 /// <reference types="bun-types" />
-import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll, spyOn } from "bun:test";
 import { createAnonymousClient } from "../setup/auth";
 import { cleanDb } from "../setup/db";
 import { prisma } from "@repo/db";
 
-// Keep a reference to the native fetch once to prevent circular mocking loops
-if (!(globalThis as any).__originalFetch) {
-  (globalThis as any).__originalFetch = globalThis.fetch;
-}
-const originalFetch = (globalThis as any).__originalFetch;
-
 describe("OAuth Flow Integration", () => {
+  let fetchSpy: any;
+  let originalFetch: typeof globalThis.fetch;
+
   beforeAll(async () => {
     await cleanDb();
 
+    originalFetch = globalThis.fetch;
+
     // Mock fetch for GitHub OAuth API calls
-    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    fetchSpy = spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : (input as any).url || input.toString();
 
       if (url.includes("github.com/login/oauth/access_token")) {
@@ -61,13 +60,13 @@ describe("OAuth Flow Integration", () => {
   });
 
   afterAll(async () => {
-    globalThis.fetch = originalFetch;
+    fetchSpy.mockRestore();
   });
 
   it("should successfully execute social auth initiation, callback, and redirection", async () => {
     const client = createAnonymousClient();
 
-    // 1. Test Case: Direct GET call to the OAuth initiation route returns the proper redirect URL.
+    // 1. Test Case: Direct POST call to the OAuth initiation route returns the proper redirect URL.
     const initRes = await client.post("/api/auth/sign-in/social", {
       provider: "github",
       callbackURL: "http://localhost:3001/dashboard"
