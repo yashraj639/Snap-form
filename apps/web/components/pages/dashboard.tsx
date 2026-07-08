@@ -165,9 +165,9 @@ export function DashboardPage() {
               </Link>
               <div className="hidden md:flex items-center gap-1">
                 {[
-                  { id: "dashboard", label: "Dashboard", href: "/dashboard" },
-                  { id: "templates", label: "Templates", href: "/dashboard" },
-                  { id: "settings", label: "Settings", href: "/dashboard" },
+                  { id: "dashboard", label: "Dashboard" },
+                  { id: "templates", label: "Templates" },
+                  { id: "settings", label: "Settings" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -228,6 +228,7 @@ export function DashboardPage() {
           >
             <div className="relative group w-full">
               <input
+                aria-label="What do you need to collect?"
                 className="w-full h-14 pl-6 pr-36 text-base rounded-full border border-border bg-background shadow-sm hover:border-foreground/30 transition-colors focus:outline-none focus:border-foreground/50 focus:ring-1 focus:ring-foreground/50 text-foreground placeholder:text-muted-foreground"
                 placeholder="What do you need to collect?"
                 value={aiPrompt}
@@ -317,7 +318,7 @@ export function DashboardPage() {
                         {form.status === "published" ? "Published" : "Draft"}
                       </Badge>
                     </div>
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+                    <button className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
                       <MoreVertical className="size-4" />
                     </button>
                   </div>
@@ -465,7 +466,7 @@ export function DashboardPage() {
         <footer className="border-t border-border mt-auto py-8 px-6 lg:px-8">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              © 2024 Snap-Form Inc.
+              © {new Date().getFullYear()} Snap-Form Inc.
             </span>
             <div className="flex gap-6">
               {["Privacy", "Terms", "Support", "API"].map((link) => (
