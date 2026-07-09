@@ -1,2 +1,3 @@
 [test]
 preload = ["./integration-tests/setup/bootstrap.ts"]
+envFile = "../../.env"
