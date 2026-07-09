@@ -3,6 +3,8 @@ import { describe, it, expect, beforeEach } from "bun:test";
 import { createAuthenticatedClient, createAnonymousClient } from "../setup/auth";
 import { cleanDb } from "../setup/db";
 import { prisma } from "@repo/db";
+import { randomUUID } from "crypto";
+import type { AxiosInstance } from "axios";
 
 // ---------------------------------------------------------------------------
 // Minimal valid fields payload (matches FormDefinitionSchema in @repo/types)
@@ -25,7 +27,7 @@ const SAMPLE_FIELDS = {
 
 /** Create a public community template via the API */
 async function createPublicTemplate(
-  client: Awaited<ReturnType<typeof createAuthenticatedClient>>["client"],
+  client: AxiosInstance,
   overrides: Record<string, unknown> = {},
 ) {
   return client.post("/api/v1/templates", {
@@ -118,7 +120,7 @@ describe("Template Community Routes", () => {
       // Create a form first so we have a valid formId
       const formResponse = await client.post("/api/v1/forms", {
         title: "Source Form",
-        slug: `source-form-${Date.now()}`,
+        slug: `source-form-${randomUUID()}`,
       });
       expect(formResponse.status).toBe(201);
       const formId = formResponse.data.data.id;
@@ -275,6 +277,22 @@ describe("Template Community Routes", () => {
       expect(response.data.success).toBe(false);
     });
 
+    it("should return 403 when attempting to purchase a private template", async () => {
+      const { client, user } = await createAuthenticatedClient();
+      const privateTemplate = await prisma.template.create({
+        data: { title: "Secret", isPublic: false, userId: user.id },
+      });
+
+      const buyer = await createAuthenticatedClient();
+      const response = await buyer.client.post(
+        `/api/v1/templates/${privateTemplate.id}/purchase`,
+      );
+
+      expect(response.status).toBe(403);
+      expect(response.data.success).toBe(false);
+      expect(response.data.message).toContain("private");
+    });
+
     it("should return 400 when a user tries to purchase their own template", async () => {
       const { client, user } = await createAuthenticatedClient();
 
@@ -294,7 +312,7 @@ describe("Template Community Routes", () => {
     it("should correctly add the template to the buyer's UserOwnedTemplate list", async () => {
       // Seller creates a template
       const seller = await createAuthenticatedClient({
-        email: `seller-${Date.now()}@test.com`,
+        email: `seller-${randomUUID()}@test.com`,
       });
       const templateRes = await createPublicTemplate(seller.client, {
         title: "Purchasable Template",
@@ -304,7 +322,7 @@ describe("Template Community Routes", () => {
 
       // Buyer purchases the template
       const buyer = await createAuthenticatedClient({
-        email: `buyer-${Date.now()}@test.com`,
+        email: `buyer-${randomUUID()}@test.com`,
       });
       const purchaseRes = await buyer.client.post(
         `/api/v1/templates/${templateId}/purchase`,
@@ -337,7 +355,7 @@ describe("Template Community Routes", () => {
 
     it("should increment the template useCount after purchase", async () => {
       const seller = await createAuthenticatedClient({
-        email: `seller2-${Date.now()}@test.com`,
+        email: `seller2-${randomUUID()}@test.com`,
       });
       const templateRes = await createPublicTemplate(seller.client, {
         title: "UseCount Template",
@@ -345,7 +363,7 @@ describe("Template Community Routes", () => {
       const templateId = templateRes.data.data.id;
 
       const buyer = await createAuthenticatedClient({
-        email: `buyer2-${Date.now()}@test.com`,
+        email: `buyer2-${randomUUID()}@test.com`,
       });
       await buyer.client.post(`/api/v1/templates/${templateId}/purchase`);
 
@@ -357,7 +375,7 @@ describe("Template Community Routes", () => {
 
     it("should return 409 when the same user purchases the same template twice", async () => {
       const seller = await createAuthenticatedClient({
-        email: `seller3-${Date.now()}@test.com`,
+        email: `seller3-${randomUUID()}@test.com`,
       });
       const templateRes = await createPublicTemplate(seller.client, {
         title: "Double Purchase Template",
@@ -365,7 +383,7 @@ describe("Template Community Routes", () => {
       const templateId = templateRes.data.data.id;
 
       const buyer = await createAuthenticatedClient({
-        email: `buyer3-${Date.now()}@test.com`,
+        email: `buyer3-${randomUUID()}@test.com`,
       });
 
       // First purchase
@@ -403,9 +421,20 @@ describe("Template Community Routes", () => {
       expect(response.status).toBe(401);
     });
 
+    it("should return 404 when reviewing a non-existent template", async () => {
+      const { client } = await createAuthenticatedClient();
+      const response = await client.post(
+        "/api/v1/templates/nonexistent-id/reviews",
+        { stars: 5 },
+      );
+
+      expect(response.status).toBe(404);
+      expect(response.data.success).toBe(false);
+    });
+
     it("should return 403 if the user has NOT purchased the template", async () => {
       const seller = await createAuthenticatedClient({
-        email: `seller4-${Date.now()}@test.com`,
+        email: `seller4-${randomUUID()}@test.com`,
       });
       const templateRes = await createPublicTemplate(seller.client, {
         title: "Review Gated Template",
@@ -414,7 +443,7 @@ describe("Template Community Routes", () => {
 
       // Stranger (never purchased)
       const stranger = await createAuthenticatedClient({
-        email: `stranger-${Date.now()}@test.com`,
+        email: `stranger-${randomUUID()}@test.com`,
       });
       const response = await stranger.client.post(
         `/api/v1/templates/${templateId}/reviews`,
@@ -444,7 +473,7 @@ describe("Template Community Routes", () => {
 
     it("should allow a review only after the user has purchased the template", async () => {
       const seller = await createAuthenticatedClient({
-        email: `seller5-${Date.now()}@test.com`,
+        email: `seller5-${randomUUID()}@test.com`,
       });
       const templateRes = await createPublicTemplate(seller.client, {
         title: "Purchase Before Review Template",
@@ -453,7 +482,7 @@ describe("Template Community Routes", () => {
 
       // Buyer purchases the template
       const buyer = await createAuthenticatedClient({
-        email: `buyer5-${Date.now()}@test.com`,
+        email: `buyer5-${randomUUID()}@test.com`,
       });
       await buyer.client.post(`/api/v1/templates/${templateId}/purchase`);
 
@@ -480,7 +509,7 @@ describe("Template Community Routes", () => {
 
     it("should return 400 when stars is out of range (> 5)", async () => {
       const seller = await createAuthenticatedClient({
-        email: `seller6-${Date.now()}@test.com`,
+        email: `seller6-${randomUUID()}@test.com`,
       });
       const templateRes = await createPublicTemplate(seller.client, {
         title: "Star Validation Template",
@@ -488,7 +517,7 @@ describe("Template Community Routes", () => {
       const templateId = templateRes.data.data.id;
 
       const buyer = await createAuthenticatedClient({
-        email: `buyer6-${Date.now()}@test.com`,
+        email: `buyer6-${randomUUID()}@test.com`,
       });
       await buyer.client.post(`/api/v1/templates/${templateId}/purchase`);
 
@@ -503,7 +532,7 @@ describe("Template Community Routes", () => {
 
     it("should return 409 when the user tries to leave a duplicate review", async () => {
       const seller = await createAuthenticatedClient({
-        email: `seller7-${Date.now()}@test.com`,
+        email: `seller7-${randomUUID()}@test.com`,
       });
       const templateRes = await createPublicTemplate(seller.client, {
         title: "Duplicate Review Template",
@@ -511,7 +540,7 @@ describe("Template Community Routes", () => {
       const templateId = templateRes.data.data.id;
 
       const buyer = await createAuthenticatedClient({
-        email: `buyer7-${Date.now()}@test.com`,
+        email: `buyer7-${randomUUID()}@test.com`,
       });
       await buyer.client.post(`/api/v1/templates/${templateId}/purchase`);
 

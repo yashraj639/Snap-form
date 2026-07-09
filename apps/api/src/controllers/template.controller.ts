@@ -320,6 +320,7 @@ export const purchaseTemplate: RequestHandler = asyncHandler(
                 description: true,
                 fields: true,
                 iconSymbol: true,
+                isPublic: true,
             },
         });
 
@@ -327,6 +328,14 @@ export const purchaseTemplate: RequestHandler = asyncHandler(
             res.status(404).json({
                 success: false,
                 message: "Template not found",
+            });
+            return;
+        }
+
+        if (!template.isPublic) {
+            res.status(403).json({
+                success: false,
+                message: "This template is private and cannot be purchased",
             });
             return;
         }
