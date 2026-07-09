@@ -107,6 +107,7 @@ describe("Form Details and Export API", () => {
                 },
             });
             expect(submitResponse1.status).toBe(201);
+            expect(submitResponse1.data.success).toBe(true);
 
             // Submit Response 2
             const submitResponse2 = await anonymousClient.post(`/api/v1/public/forms/${form.slug}/responses`, {
@@ -117,6 +118,8 @@ describe("Form Details and Export API", () => {
                 },
             });
             expect(submitResponse2.status).toBe(201);
+            expect(submitResponse2.data.success).toBe(true);
+
 
             // Export CSV
             const exportResponse = await client.get(`/api/v1/forms/${form.id}/responses/export/csv`);
@@ -134,7 +137,7 @@ describe("Form Details and Export API", () => {
             const elements = (form.fields as { elements: unknown[] }).elements;
             const expectedColumnCount = 3 + elements.length;
             lines.forEach((line) => {
-                const columns = line.split(",");
+                const columns = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g) || [];
                 expect(columns.length).toBe(expectedColumnCount);
             });
 
