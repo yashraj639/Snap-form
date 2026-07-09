@@ -29,6 +29,7 @@ import {
   AlignLeft,
   Heading,
   ChevronUp,
+  SquareCheck,
 } from "lucide-react";
 
 /* ── Types ───────────────────────────────────────────────────────── */
@@ -72,7 +73,7 @@ const FIELD_TYPE_OPTIONS = [
   { value: "phone" as const, label: "Phone", icon: Phone },
   { value: "dropdown" as const, label: "Dropdown", icon: ChevronDown },
   { value: "multipleChoice" as const, label: "Multiple Choice", icon: ListOrdered },
-  { value: "checkbox" as const, label: "Checkbox", icon: Star },
+  { value: "checkbox" as const, label: "Checkbox", icon: SquareCheck },
   { value: "datePicker" as const, label: "Date", icon: Calendar },
   { value: "rating" as const, label: "Rating", icon: Star },
   { value: "heading" as const, label: "Heading", icon: Heading },
@@ -449,7 +450,6 @@ export function CreateFormPage() {
 
   /* ── Native HTML5 Drag & Drop — Canvas handlers ──────────────── */
 
-  /** A snippet from the palette is dropped onto the canvas */
   /** Drop snippet on the canvas background (appends to end) */
   const handleCanvasDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
