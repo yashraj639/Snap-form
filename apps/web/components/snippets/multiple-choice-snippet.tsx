@@ -1,3 +1,5 @@
+import { RadioGroup, Radio } from "@repo/ui/components/ui/radio-group";
+import { Label } from "@repo/ui/components/ui/label";
 import type { MultipleChoiceSnippetProps } from "./types";
 
 export function MultipleChoiceSnippet({
@@ -15,25 +17,21 @@ export function MultipleChoiceSnippet({
       {element.description && (
         <p className="text-xs text-muted-foreground -mt-1">{element.description}</p>
       )}
-      {element.options.map((option) => (
-        <label
-          key={option.id}
-          className="flex items-center gap-2.5 cursor-pointer group"
-        >
-          <input
-            type="radio"
-            name={element.id}
-            value={option.id}
-            checked={value === option.id}
-            disabled={readOnly}
-            onChange={() => !readOnly && onChange?.(option.id)}
-            className="h-4 w-4 accent-primary"
-          />
-          <span className="text-sm group-hover:text-foreground transition-colors">
+      <RadioGroup
+        value={value}
+        onValueChange={(val) => !readOnly && onChange?.(val)}
+        disabled={readOnly}
+      >
+        {element.options.map((option) => (
+          <Label
+            key={option.id}
+            className="flex items-center gap-2.5 cursor-pointer font-normal"
+          >
+            <Radio value={option.id} />
             {option.label}
-          </span>
-        </label>
-      ))}
+          </Label>
+        ))}
+      </RadioGroup>
     </fieldset>
   );
 }

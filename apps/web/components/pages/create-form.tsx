@@ -7,6 +7,14 @@ import { Button } from "@repo/ui/components/ui/button";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Label } from "@repo/ui/components/ui/label";
 import { Checkbox } from "@repo/ui/components/ui/checkbox";
+import { Input } from "@repo/ui/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectPopup,
+  SelectItem,
+} from "@repo/ui/components/ui/select";
 import {
   MessageSquare,
   Wrench,
@@ -179,11 +187,11 @@ function OptionsEditor({
             <span className="text-xs text-muted-foreground w-5 shrink-0 text-right">
               {idx + 1}.
             </span>
-            <input
-              className="flex-1 border border-border bg-background text-sm p-1.5 outline-none focus:border-foreground transition-colors rounded-md"
+            <Input
+              className="flex-1"
               type="text"
               value={option.label}
-              onChange={(e) => updateOptionLabel(option.id, e.target.value)}
+              onChange={(e) => updateOptionLabel(option.id, (e.target as HTMLInputElement).value)}
               placeholder={`Option ${idx + 1}`}
             />
             <button
@@ -224,29 +232,30 @@ function EditSettingsPanel({
         <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Field Type
         </Label>
-        <div className="relative">
-          <select
-            className="w-full border border-border bg-background text-sm p-2 pr-8 outline-none focus:border-foreground transition-colors rounded-md appearance-none"
-            value={field.type}
-            onChange={(e) => {
-              const newType = e.target.value as FormFieldType;
-              const newFieldDefaults = createField(newType);
-              onUpdate(field.id, {
-                ...newFieldDefaults,
-                id: field.id, // Preserve id
-                label: field.label, // Preserve label
-                required: field.required // Preserve required state
-              });
-            }}
-          >
+        <Select
+          value={field.type}
+          onValueChange={(val) => {
+            const newType = val as FormFieldType;
+            const newFieldDefaults = createField(newType);
+            onUpdate(field.id, {
+              ...newFieldDefaults,
+              id: field.id,
+              label: field.label,
+              required: field.required,
+            });
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectPopup>
             {FIELD_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
+              <SelectItem key={opt.value} value={opt.value}>
                 {opt.label}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-        </div>
+          </SelectPopup>
+        </Select>
       </div>
 
       {/* Label — all types */}
@@ -254,11 +263,10 @@ function EditSettingsPanel({
         <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Label
         </Label>
-        <input
-          className="w-full border border-border bg-background text-sm p-2 outline-none focus:border-foreground transition-colors rounded-md"
+        <Input
           type="text"
           value={field.label}
-          onChange={(e) => onUpdate(field.id, { label: e.target.value })}
+          onChange={(e) => onUpdate(field.id, { label: (e.target as HTMLInputElement).value })}
         />
       </div>
 
@@ -271,12 +279,11 @@ function EditSettingsPanel({
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Placeholder
           </Label>
-          <input
-            className="w-full border border-border bg-background text-sm p-2 outline-none focus:border-foreground transition-colors rounded-md text-muted-foreground"
+          <Input
             type="text"
             value={field.placeholder}
             onChange={(e) =>
-              onUpdate(field.id, { placeholder: e.target.value })
+              onUpdate(field.id, { placeholder: (e.target as HTMLInputElement).value })
             }
           />
         </div>
@@ -289,12 +296,11 @@ function EditSettingsPanel({
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Min
             </Label>
-            <input
-              className="w-full border border-border bg-background text-sm p-2 outline-none focus:border-foreground transition-colors rounded-md"
+            <Input
               type="number"
               value={field.min}
               onChange={(e) =>
-                onUpdate(field.id, { min: Number(e.target.value) })
+                onUpdate(field.id, { min: Number((e.target as HTMLInputElement).value) })
               }
             />
           </div>
@@ -302,12 +308,11 @@ function EditSettingsPanel({
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Max
             </Label>
-            <input
-              className="w-full border border-border bg-background text-sm p-2 outline-none focus:border-foreground transition-colors rounded-md"
+            <Input
               type="number"
               value={field.max}
               onChange={(e) =>
-                onUpdate(field.id, { max: Number(e.target.value) })
+                onUpdate(field.id, { max: Number((e.target as HTMLInputElement).value) })
               }
             />
           </div>
@@ -315,13 +320,12 @@ function EditSettingsPanel({
             <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Step
             </Label>
-            <input
-              className="w-full border border-border bg-background text-sm p-2 outline-none focus:border-foreground transition-colors rounded-md"
+            <Input
               type="number"
               value={field.step}
               min={1}
               onChange={(e) =>
-                onUpdate(field.id, { step: Number(e.target.value) })
+                onUpdate(field.id, { step: Number((e.target as HTMLInputElement).value) })
               }
             />
           </div>
@@ -334,22 +338,23 @@ function EditSettingsPanel({
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Max Stars
           </Label>
-          <div className="relative">
-            <select
-              className="w-full border border-border bg-background text-sm p-2 pr-8 outline-none focus:border-foreground transition-colors rounded-md appearance-none"
-              value={field.max}
-              onChange={(e) =>
-                onUpdate(field.id, { max: Number(e.target.value) })
-              }
-            >
+          <Select
+            value={String(field.max ?? 5)}
+            onValueChange={(val) =>
+              onUpdate(field.id, { max: Number(val) })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectPopup>
               {Array.from({ length: 9 }, (_, i) => i + 2).map((n) => (
-                <option key={n} value={n}>
+                <SelectItem key={n} value={String(n)}>
                   {n} stars
-                </option>
+                </SelectItem>
               ))}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-          </div>
+            </SelectPopup>
+          </Select>
         </div>
       )}
 

@@ -6,7 +6,6 @@
     "./globals.css": "./src/globals.css",
     "./*": "./src/*.tsx",
     "./components/*": "./src/components/*.tsx",
-    "./components/snippets": "./src/components/snippets/index.ts",
     "./lib/*": "./src/lib/*.ts",
     "./hooks/*": "./src/hooks/*.ts"
   },

@@ -25,15 +25,12 @@ export type NumberInputElement = {
 
 // ============================================
 // SHARED PROP SHAPE
-// Each snippet component receives its typed element definition
-// plus an onChange callback to report its current value back up.
 // ============================================
 
 export type SnippetProps<T, V = string | number | boolean | string[] | null> = {
   element: T;
   value?: V;
   onChange?: (value: V) => void;
-  /** Render in read-only mode (e.g. inside the form builder preview) */
   readOnly?: boolean;
 };
 

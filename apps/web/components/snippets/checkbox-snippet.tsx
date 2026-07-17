@@ -1,3 +1,5 @@
+import { Checkbox } from "@repo/ui/components/ui/checkbox";
+import { Label } from "@repo/ui/components/ui/label";
 import type { CheckboxSnippetProps } from "./types";
 
 export function CheckboxSnippet({
@@ -24,22 +26,17 @@ export function CheckboxSnippet({
         <p className="text-xs text-muted-foreground -mt-1">{element.description}</p>
       )}
       {element.options.map((option) => (
-        <label
+        <Label
           key={option.id}
-          className="flex items-center gap-2.5 cursor-pointer group"
+          className="flex items-center gap-2.5 cursor-pointer font-normal"
         >
-          <input
-            type="checkbox"
-            value={option.id}
+          <Checkbox
             checked={value.includes(option.id)}
             disabled={readOnly}
-            onChange={() => toggle(option.id)}
-            className="h-4 w-4 rounded accent-primary"
+            onCheckedChange={() => toggle(option.id)}
           />
-          <span className="text-sm group-hover:text-foreground transition-colors">
-            {option.label}
-          </span>
-        </label>
+          {option.label}
+        </Label>
       ))}
     </fieldset>
   );
