@@ -5,6 +5,9 @@ import { isPrismaErrorCode } from "../utils/prisma";
 import { FormDefinitionSchema } from "@repo/types";
 import { CreateFormInput, UpdateFormInput } from "../lib/form-schemas";
 import prisma from "../lib/db";
+import { config } from "../lib/env";
+import { aiClient } from "../lib/ai/client";
+import { buildFormGenerationPrompt } from "../lib/ai/prompt";
 import { formatZodErrors } from "@/middleware/validate";
 
 // ============================================
@@ -285,20 +288,69 @@ export const togglePublish: RequestHandler = asyncHandler(
 
 export const generateForm: RequestHandler = asyncHandler(
   async (req: Request, res: Response) => {
+    if (!config.ai.apiKey) {
+      res.status(503).json({ success: false, message: "AI service not configured" });
+      return;
+    }
+
     const { prompt } = req.body;
 
-    // TODO: Connect real LLM logic here later. 
-    // For now, return a basic mock structure so the frontend can test.
-    const dummyDefinition = {
-      version: "1.0",
-      elements: [
-        { id: "q1", type: "text", label: `AI generated question for: ${prompt || "General"}`, required: true }
-      ]
-    };
+    const systemPrompt = buildFormGenerationPrompt();
 
-    res.json({ success: true, data: { definition: dummyDefinition } });
+    const MAX_RETRIES = 1;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+
+      try {
+        const result = await aiClient.chat.send({
+          chatRequest: {
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: prompt },
+            ],
+            model: config.ai.model,
+            stream: false,
+            responseFormat: { type: "json_object" },
+          },
+        }, {
+          timeoutMs: 30000,
+        });
+
+        const raw = result.choices[0]?.message?.content;
+        if (!raw) {
+          if (attempt < MAX_RETRIES) continue;
+          res.status(502).json({ success: false, message: "AI returned an empty response" });
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+        const validated = FormDefinitionSchema.safeParse(parsed);
+        if (validated.success) {
+          res.json({ success: true, data: { definition: validated.data } });
+          return;
+        }
+
+        if (attempt < MAX_RETRIES) continue;
+
+        res.status(422).json({
+          success: false,
+          message: "AI response did not match the expected form schema",
+          errors: validated.error.flatten(),
+        });
+        return;
+      } catch (err) {
+        if (attempt < MAX_RETRIES) continue;
+        console.error("AI form generation failed:", err);
+        res.status(422).json({
+          success: false,
+          message: "AI response was invalid or failed to generate",
+        });
+        return;
+      }
+    }
   }
 );
+
 
 // ============================================
 // GET /api/v1/forms/:id/analytics

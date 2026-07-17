@@ -39,7 +39,7 @@ export const SubmitResponseSchema = z.object({
 });
 
 export const GenerateFormSchema = z.object({
-  prompt: z.string().trim().min(1, "Prompt cannot be empty").max(1000, "Prompt is too long").optional()
+  prompt: z.string().trim().min(1, "Prompt cannot be empty").max(1000, "Prompt is too long")
 });
 
 

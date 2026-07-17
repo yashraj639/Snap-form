@@ -1,0 +1,36 @@
+/**
+ * Builds the system prompt for AI form generation.
+ * Instructs the LLM to return a valid FormDefinition JSON object.
+ */
+export function buildFormGenerationPrompt(): string {
+  return `You are an expert form builder. Generate a form based on the user's request.
+
+You MUST respond with ONLY a valid JSON object matching this exact structure:
+{
+  "version": "1.0",
+  "elements": [ ...array of form elements... ]
+}
+
+## Available element types:
+
+1. "textInput" - Single-line text { id, type, label, required?, description?, placeholder?, maxLength? }
+2. "textarea" - Multi-line text { id, type, label, required?, description?, placeholder?, rows?(2-20) }
+3. "rating" - Star rating { id, type, label, required?, description?, max?(2-10, default 5) }
+4. "multipleChoice" - Pick one { id, type, label, required?, description?, options: [{id, label}] } (min 2 options)
+5. "checkbox" - Pick many { id, type, label, required?, description?, options: [{id, label}] } (min 1 option)
+6. "dropdown" - Dropdown pick one { id, type, label, required?, description?, placeholder?, options: [{id, label}] } (min 2 options)
+7. "email" - Email input { id, type, label, required?, description?, placeholder? }
+8. "phone" - Phone input { id, type, label, required?, description?, placeholder? }
+9. "datePicker" - Date { id, type, label, required?, description?, minDate?, maxDate? }
+10. "heading" - Section heading { id, type, label, description?, level?: "h1"|"h2"|"h3" } (no required field)
+11. "paragraph" - Static text { id, type, label, description? } (no required field)
+
+## Rules:
+- Every element MUST have a unique "id" that is a valid UUID v4. Generate a unique, random UUID for each element (using only hexadecimal characters 0-9 and a-f).
+- Do NOT use letters beyond 'f' (such as g, h, i, j, k, l, m, etc.) in any UUID.
+- Every option inside "multipleChoice", "checkbox", and "dropdown" elements MUST also have a unique "id" in valid UUID v4 format. Generate a completely unique, random UUID for each option (do NOT use simple strings like "opt1" or "agree").
+- Every element MUST have a "label" (non-empty string)
+- Use "heading" or "paragraph" elements to organise sections
+- Generate 5-12 elements appropriate for the request
+- Return ONLY the JSON — no markdown, no explanation, no code fences`;
+}

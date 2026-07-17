@@ -28,4 +28,8 @@ export const config = {
   frontend: {
     url: process.env.FRONTEND_URL || "http://localhost:3001",
   },
+  ai: {
+    apiKey: process.env.OPENROUTER_API_KEY || "",
+    model: process.env.AI_MODEL || "nvidia/nemotron-3-ultra-550b-a55b:free",
+  },
 };

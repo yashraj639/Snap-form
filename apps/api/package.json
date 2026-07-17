@@ -12,6 +12,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@openrouter/sdk": "^0.13.49",
     "@repo/db": "workspace:*",
     "@repo/types": "workspace:*",
     "axios": "^1.18.1",
