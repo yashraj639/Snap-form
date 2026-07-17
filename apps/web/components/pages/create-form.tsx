@@ -298,10 +298,11 @@ function EditSettingsPanel({
             </Label>
             <Input
               type="number"
-              value={field.min}
-              onChange={(e) =>
-                onUpdate(field.id, { min: Number((e.target as HTMLInputElement).value) })
-              }
+              value={field.min ?? ""}
+              onChange={(e) => {
+                const val = (e.target as HTMLInputElement).value;
+                onUpdate(field.id, { min: val === "" ? undefined : Number(val) });
+              }}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -310,10 +311,11 @@ function EditSettingsPanel({
             </Label>
             <Input
               type="number"
-              value={field.max}
-              onChange={(e) =>
-                onUpdate(field.id, { max: Number((e.target as HTMLInputElement).value) })
-              }
+              value={field.max ?? ""}
+              onChange={(e) => {
+                const val = (e.target as HTMLInputElement).value;
+                onUpdate(field.id, { max: val === "" ? undefined : Number(val) });
+              }}
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -322,11 +324,12 @@ function EditSettingsPanel({
             </Label>
             <Input
               type="number"
-              value={field.step}
+              value={field.step ?? ""}
               min={1}
-              onChange={(e) =>
-                onUpdate(field.id, { step: Number((e.target as HTMLInputElement).value) })
-              }
+              onChange={(e) => {
+                const val = (e.target as HTMLInputElement).value;
+                onUpdate(field.id, { step: val === "" ? undefined : Number(val) });
+              }}
             />
           </div>
         </div>
