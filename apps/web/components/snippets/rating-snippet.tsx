@@ -1,14 +1,20 @@
+import { Label } from "@repo/ui/components/ui/label";
 import type { RatingSnippetProps } from "./types";
 
-export function RatingSnippet({ element, value = 0, onChange, readOnly }: RatingSnippetProps) {
+export function RatingSnippet({
+  element,
+  value = 0,
+  onChange,
+  readOnly,
+}: RatingSnippetProps) {
   const stars = Array.from({ length: element.max }, (_, i) => i + 1);
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-medium leading-none">
+      <Label>
         {element.label}
         {element.required && <span className="ml-1 text-destructive">*</span>}
-      </span>
+      </Label>
       {element.description && (
         <p className="text-xs text-muted-foreground">{element.description}</p>
       )}
